@@ -9,6 +9,7 @@ const Login = () => {
   const location = useLocation();
   const from = location.state?.from?.pathname || "/";
   const user = useSelector((state) => state.user);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     if (user) {
@@ -27,11 +28,10 @@ const Login = () => {
           break;
       }
     }
-  }, [user]);
+  }, [user, navigate, from]);
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const dispatch = useDispatch();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -39,8 +39,11 @@ const Login = () => {
     try {
       const response = await fetch(`${SERVER_URL}/auth/login`, {
         method: "POST",
+        credentials: "include",
         headers: {
+          Accept: "application/json",
           "Content-Type": "application/json",
+          "Access-Control-Allow-Credentials": true,
         },
         body: JSON.stringify({ username, password }),
       });
@@ -50,9 +53,7 @@ const Login = () => {
       }
 
       const data = await response.json();
-      console.log(data);
       dispatch(setUser(data.user));
-      navigate(from, { replace: true });
     } catch (error) {
       console.error("Error logging in:", error);
     }
@@ -79,14 +80,17 @@ const Login = () => {
                     viewBox="0 0 24 24"
                     xmlns="http://www.w3.org/2000/svg"
                   >
-                    <path d="M20 15.5c-1.25 0-2.45-.2-3.57-.58-.35-.11-.76-.02-1.03.25l-2.2 2.2c-3.38-1.78-6.12-4.53-7.9-7.9l2.2-2.2c.28-.28.37-.68.26-1.03-.38-1.12-.58-2.32-.58-3.57C7.5 2.67 6.83 2 6 2H3.5C2.67 2 2 2.67 2 3.5 2 15.24 8.76 22 20.5 22c.83 0 1.5-.67 1.5-1.5V18c0-.83-.67-1.5-1.5-1.5z"></path>
+                    <path
+                      d="M20.4,3.6H3.6C2.716,3.6,2,4.316,2,5.2v13.6c0,0.884,0.716,1.6,1.6,1.6h16.8c0.884,0,1.6-0.716,1.6-1.6V5.2
+    C22,4.316,21.284,3.6,20.4,3.6z M20,7.017l-7.4,4.737c-0.347,0.222-0.778,0.222-1.125,0L4,7.017V5.6l8,5.127L20,5.6V7.017z"
+                    />
                   </svg>
                 </span>
                 <input
                   type="text"
                   id="design-login-email"
                   className="flex-1 appearance-none border border-gray-300 w-full py-2 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
-                  placeholder="Phone Number"
+                  placeholder="Email"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                 />
