@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { SERVER_URL } from "@/constants/constants";
 import { setUser } from "@/redux/userSlice";
 import { useDispatch, useSelector } from "react-redux";
+import Navbar from "@/components/common/Navbar";
 
 const Home = () => {
   const user = useSelector((state) => state.user);
@@ -55,9 +56,8 @@ const Home = () => {
   }, [user, navigate, dispatch]);
 
   return (
-    <div className="flex flex-col">
-      <h1>Home</h1>
-      <Link to="/login">Login</Link>
+    <div className="h-screen w-full bg-black">
+      <Navbar />
     </div>
   );
 };
