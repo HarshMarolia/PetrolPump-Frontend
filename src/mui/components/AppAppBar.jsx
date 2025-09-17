@@ -146,6 +146,7 @@ function AppAppBar({ mode, toggleColorMode }) {
                 alignItems: 'center',
               }}
             >
+              
               {/* <ToggleColorMode mode={mode} toggleColorMode={toggleColorMode} /> */}
              <Link to="/login"><Button
                 color="primary"
@@ -204,6 +205,7 @@ function AppAppBar({ mode, toggleColorMode }) {
                    <MenuItem onClick={() => scrollToSection('highlights')}>
                     Highlights
                   </MenuItem>
+                  {/*
                   <MenuItem onClick={() => scrollToSection('pricing')}>
                     Pricing
                   </MenuItem>
@@ -212,6 +214,7 @@ function AppAppBar({ mode, toggleColorMode }) {
                   </MenuItem>
                  
                   <MenuItem onClick={() => scrollToSection('faq')}>FAQ</MenuItem>
+                  */}
                   <Divider />
                   {/* <MenuItem>
                     <Button
