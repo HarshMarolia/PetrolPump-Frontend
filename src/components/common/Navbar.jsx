@@ -52,7 +52,7 @@ const Navbar = () => {
           alt=""
           className="rounded-full sm:w-14 sm:h-14 w-10 h-10"
         />
-        <h1 className="text-white sm:text-2xl">FuleInfo</h1>
+        <h1 className="text-white sm:text-2xl">FuelInfo</h1>
       </div>
       <div>
         {user === null ? (
