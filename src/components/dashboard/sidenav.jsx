@@ -58,7 +58,7 @@ const Sidenav = () => {
               alt=""
               className="rounded-full h-14 w-14"
             />
-            <p className="text-2xl font-bold">FuleInfo</p>
+            <p className="text-2xl font-bold">FuelInfo</p>
           </div>
         </div>
       </div>
