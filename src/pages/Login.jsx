@@ -4,7 +4,6 @@ import { SERVER_URL } from "@/constants/constants";
 import { setUser } from "@/redux/userSlice";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-// import AppAppBar from "@/mui/components/AppAppBar";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -13,6 +12,8 @@ const Login = () => {
   const user = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const [togglePage, setTogglePage] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -33,14 +34,12 @@ const Login = () => {
     }
   }, [user, navigate, from]);
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-
   const handleForgotPassword = async (e) => {
     e.preventDefault();
 
     if (!username) {
-      toast("Please enter your email address", {
+      toast.warning("Email required", {
+        description: "Please enter your email address",
         action: {
           label: "Okay",
           onClick: () => console.log("ok"),
@@ -48,6 +47,7 @@ const Login = () => {
       });
       return;
     }
+    
     try {
       const response = await fetch(`${SERVER_URL}/auth/forgot-password`, {
         method: "POST",
@@ -55,25 +55,44 @@ const Login = () => {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          "Access-Control-Allow-Credentials": true,
         },
         body: JSON.stringify({ email: username }),
       });
 
       if (!response.ok) {
-        throw new Error("Login failed");
+        const errorData = await response.json().catch(() => ({}));
+        toast.error("Failed to send reset email", {
+          description: errorData.message || "Please try again later",
+          action: {
+            label: "Okay",
+            onClick: () => console.log("ok"),
+          },
+        });
+        return;
       }
 
       const data = await response.json();
-      toast("Email has been sent!", {
-        description: data.message,
+      toast.success("Email has been sent!", {
+        description: data.message || "Check your inbox for password reset instructions",
         action: {
           label: "Okay",
           onClick: () => console.log("ok"),
         },
       });
+      
+      // Reset form and go back to login
+      setUsername("");
+      setTogglePage(false);
+      
     } catch (error) {
       console.error("Error forgetting password:", error);
+      toast.error("Network error", {
+        description: "Unable to connect to server. Please check your internet connection.",
+        action: {
+          label: "Okay",
+          onClick: () => console.log("ok"),
+        },
+      });
     }
   };
 
@@ -81,7 +100,8 @@ const Login = () => {
     e.preventDefault();
 
     if (!username || !password) {
-      toast("Please enter your email address and password", {
+      toast.warning("Missing credentials", {
+        description: "Please enter your email address and password",
         action: {
           label: "Okay",
           onClick: () => console.log("ok"),
@@ -97,31 +117,70 @@ const Login = () => {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          "Access-Control-Allow-Credentials": true,
         },
-        body: JSON.stringify({ username, password }),
+        // backend commonly expects `email` field; send email instead of username
+        body: JSON.stringify({ email: username, password }),
       });
+
+      // parse response body once (may be empty/non-json) and log for debugging
+      const parsed = await response.json().catch(() => null);
+      console.log("[auth/login] response status:", response.status, parsed);
 
       if (!response.ok) {
-        throw new Error("Login failed");
+        const errorData = parsed || {};
+
+        if (response.status === 401) {
+          toast.error("Login failed", {
+            description: errorData.message || "Invalid email or password",
+            action: {
+              label: "Okay",
+              onClick: () => console.log("ok"),
+            },
+          });
+        } else {
+          toast.error("Login failed", {
+            description: errorData.message || "Something went wrong. Please try again.",
+            action: {
+              label: "Okay",
+              onClick: () => console.log("ok"),
+            },
+          });
+        }
+        return;
       }
 
-      const data = await response.json();
-      toast("Logged in successfully!", {
+      const data = parsed;
+      
+      if (!data.user) {
+        toast.error("Login failed", {
+          description: "Invalid response from server",
+          action: {
+            label: "Okay",
+            onClick: () => console.log("ok"),
+          },
+        });
+        return;
+      }
+      
+      toast.success("Logged in successfully!", {
+        description: `Welcome back${data.user.name ? ', ' + data.user.name : ''}!`,
         action: {
           label: "Okay",
           onClick: () => console.log("ok"),
         },
       });
+      
       dispatch(setUser(data.user));
+      
     } catch (error) {
-      toast("Login failed!", {
+      console.error("Error logging in:", error);
+      toast.error("Network error", {
+        description: "Unable to connect to server. Please check your internet connection.",
         action: {
           label: "Okay",
           onClick: () => console.log("ok"),
         },
       });
-      console.error("Error logging in:", error);
     }
   };
 
@@ -131,14 +190,11 @@ const Login = () => {
   };
 
   return (
-
     <div className="bg-[#18181b] flex flex-wrap w-full h-screen">
-    
       <div className="flex flex-col w-full md:w-1/2">
-      <div className="flex justify-center pt-12 md:justify-center md:mt-64 md:pl-12 md:-mb-24">
-      {/* <AppAppBar /> */}
+        <div className="flex justify-center pt-12 md:justify-center md:mt-64 md:pl-12 md:-mb-24">
           <h1 className="p-4 text-xl font-bold text-white md:text-3xl">LOGIN</h1>
-        </div>  
+        </div>
       </div>
       {!togglePage ? (
         <div className="w-full md:w-1/2 shadow-2xl bg-black sm:h-screen h-[80vh] flex items-center justify-center">
@@ -164,7 +220,7 @@ const Login = () => {
                   <input
                     type="text"
                     id="design-login-email"
-                    className="flex-1 appearance-none border border-gray-300 w-full py-2 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-2   focus:border-transparent"
+                    className="flex-1 appearance-none border border-gray-300 w-full py-2 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-2 focus:border-transparent"
                     placeholder="Email"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
@@ -187,7 +243,7 @@ const Login = () => {
                   <input
                     type="password"
                     id="design-login-password"
-                    className="flex-1 appearance-none border border-gray-300 w-full py-2 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-2   focus:border-transparent"
+                    className="flex-1 appearance-none border border-gray-300 w-full py-2 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-2 focus:border-transparent"
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -209,11 +265,12 @@ const Login = () => {
                 <span className="w-full">Submit</span>
               </button>
               <Link to="/">
-              <button
-                className="w-full px-4 py-2 mt-2 text-base font-semibold shadow-[#033363] text-center text-white transition duration-200 ease-in bg-black shadow-md hover:text-black hover:bg-white focus:outline-none focus:ring-2"
-              >
-                <span className="w-full">Back to Home !</span>
-              </button>
+                <button
+                  type="button"
+                  className="w-full px-4 py-2 mt-2 text-base font-semibold shadow-[#033363] text-center text-white transition duration-200 ease-in bg-black shadow-md hover:text-black hover:bg-white focus:outline-none focus:ring-2"
+                >
+                  <span className="w-full">Back to Home !</span>
+                </button>
               </Link>
             </form>
           </div>
@@ -250,7 +307,7 @@ const Login = () => {
                   <input
                     type="text"
                     id="design-login-email"
-                    className="flex-1 appearance-none border border-gray-300 w-full py-2 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-2   focus:border-transparent"
+                    className="flex-1 appearance-none border border-gray-300 w-full py-2 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-2 focus:border-transparent"
                     placeholder="Email"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
@@ -258,6 +315,7 @@ const Login = () => {
                 </div>
                 <div className="flex justify-end">
                   <button
+                    type="button"
                     className="text-gray-500 hover:text-white text-sm pt-3 w-fit"
                     onClick={handleTogglePage}
                   >
