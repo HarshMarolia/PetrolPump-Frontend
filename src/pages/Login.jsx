@@ -122,16 +122,37 @@ const Login = () => {
         body: JSON.stringify({ email: username, password }),
       });
 
-      // parse response body once (may be empty/non-json) and log for debugging
-      const parsed = await response.json().catch(() => null);
-      console.log("[auth/login] response status:", response.status, parsed);
+      // Read raw response text (works for JSON or plain text). Then try to parse JSON.
+      const rawText = await response.text().catch(() => null);
+      let parsed = null;
+      if (rawText) {
+        try {
+          parsed = JSON.parse(rawText);
+        } catch (e) {
+          parsed = null; // not JSON
+        }
+      }
+
+      // Log status and response for debugging (don't log the password)
+      console.log("[auth/login] status:", response.status, "responseText:", rawText, "parsed:", parsed, {
+        email: username,
+        password: password ? `*${password.length}` : "",
+      });
 
       if (!response.ok) {
-        const errorData = parsed || {};
+        const errorMsg = (parsed && (parsed.message || parsed.error)) || rawText || "Something went wrong";
 
         if (response.status === 401) {
           toast.error("Login failed", {
-            description: errorData.message || "Invalid email or password",
+            description: errorMsg || "Invalid email or password",
+            action: {
+              label: "Okay",
+              onClick: () => console.log("ok"),
+            },
+          });
+        } else if (response.status === 400) {
+          toast.error("Bad request", {
+            description: errorMsg || "Request was malformed. Check the request payload.",
             action: {
               label: "Okay",
               onClick: () => console.log("ok"),
@@ -139,7 +160,7 @@ const Login = () => {
           });
         } else {
           toast.error("Login failed", {
-            description: errorData.message || "Something went wrong. Please try again.",
+            description: errorMsg || "Something went wrong. Please try again.",
             action: {
               label: "Okay",
               onClick: () => console.log("ok"),
@@ -149,7 +170,7 @@ const Login = () => {
         return;
       }
 
-      const data = parsed;
+      const data = parsed || null;
       
       if (!data.user) {
         toast.error("Login failed", {
