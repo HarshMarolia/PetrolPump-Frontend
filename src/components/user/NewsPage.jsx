@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,7 +12,7 @@ import {
 import { useSelector } from "react-redux";
 import { useCreateNews } from "@/api/news";
 import { toast } from "sonner";
-import { State, City } from "country-state-city";
+import { getAllStates, getCitiesForState } from "@/constants/state_city";
 
 const NewsPage = () => {
   const { mutate: createNews, isError } = useCreateNews();
@@ -27,14 +27,23 @@ const NewsPage = () => {
     state: "Andaman and Nicobar Islands",
   };
   const [formData, setFormData] = useState(initialState);
-  const handleChange = (e) => {
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
-  };
-  const handleSubmit = (e) => {
+    setFormData((prevState) => {
+      const newState = {
+        ...prevState,
+        [name]: value,
+      };
+      
+      // Reset city when state changes
+      if (name === "state") {
+        newState.city = "";
+      }
+      
+      return newState;
+    });
+  }, []);
+  const handleSubmit = useCallback((e) => {
     e.preventDefault();
     createNews(formData);
     if (!isError) {
@@ -53,7 +62,30 @@ const NewsPage = () => {
         },
       });
     }
-  };
+  }, [formData, createNews, isError, initialState]);
+
+  // Memoized options for better performance
+  const stateOptions = useMemo(() => 
+    getAllStates().map((state, index) => (
+      <option value={state} key={index}>
+        {state}
+      </option>
+    )), []
+  );
+
+  const cityOptions = useMemo(() => {
+    if (!formData.state) {
+      return <option value="">Select a state first</option>;
+    }
+    
+    const cities = getCitiesForState(formData.state);
+    return cities.map((city, index) => (
+      <option value={city} key={index}>
+        {city}
+      </option>
+    ));
+  }, [formData.state]);
+
   return (
     <div className="text-white bottom-28">
       <Dialog>
@@ -158,11 +190,7 @@ const NewsPage = () => {
                 value={formData.state}
                 onChange={handleChange}
               >
-                {State.getStatesOfCountry("IN").map((state, index) => (
-                  <option value={state.name} key={index}>
-                    {state.name}
-                  </option>
-                ))}
+                {stateOptions}
               </select>
             </>
             <>
@@ -175,12 +203,9 @@ const NewsPage = () => {
                 className="p-2 rounded border border-gray-600 bg-[#1d1c20] text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.city}
                 onChange={handleChange}
+                disabled={!formData.state}
               >
-                {City.getCitiesOfCountry("IN").map((city, index) => (
-                  <option value={city.name} key={index}>
-                    {city.name}
-                  </option>
-                ))}
+                {cityOptions}
               </select>
             </>
           </div>

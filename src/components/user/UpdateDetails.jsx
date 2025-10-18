@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { toast } from "sonner";
-import { State, City } from "country-state-city";
+import { getAllStates, getCitiesForState } from "@/constants/state_city";
 import { useUpdateUser } from "@/api/user";
 
 const UpdateDetails = ({ userData }) => {
@@ -15,15 +15,24 @@ const UpdateDetails = ({ userData }) => {
     });
   }, [userData]);
 
-  const handleChange = (e) => {
+  const handleChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
+    setFormData((prevState) => {
+      const newState = {
+        ...prevState,
+        [name]: type === "checkbox" ? checked : value,
+      };
+      
+      // Reset city when state changes
+      if (name === "state") {
+        newState.city = "";
+      }
+      
+      return newState;
+    });
+  }, []);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     const formattedData = {
       ...formData,
@@ -32,7 +41,29 @@ const UpdateDetails = ({ userData }) => {
     const { _id } = formattedData;
     await updateUser({ id: _id, userData: formattedData });
     toast.success("User updated successfully");
-  };
+  }, [formData, updateUser]);
+
+  // Memoized options for better performance
+  const stateOptions = useMemo(() => 
+    getAllStates().map((state, index) => (
+      <option value={state} key={index}>
+        {state}
+      </option>
+    )), []
+  );
+
+  const cityOptions = useMemo(() => {
+    if (!formData.state) {
+      return <option value="">Select a state first</option>;
+    }
+    
+    const cities = getCitiesForState(formData.state);
+    return cities.map((city, index) => (
+      <option value={city} key={index}>
+        {city}
+      </option>
+    ));
+  }, [formData.state]);
 
   return (
     <div className="text-white bottom-28">
@@ -109,11 +140,7 @@ const UpdateDetails = ({ userData }) => {
           value={formData.state}
           onChange={handleChange}
         >
-          {State.getStatesOfCountry("IN").map((state, index) => (
-            <option value={state.name} key={index}>
-              {state.name}
-            </option>
-          ))}
+          {stateOptions}
         </select>
         <label htmlFor="city" className="text-sm font-medium text-left">
           Select City
@@ -124,12 +151,9 @@ const UpdateDetails = ({ userData }) => {
           className="p-2 w-11/12 rounded border border-gray-600 bg-[#1d1c20] text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
           value={formData.city}
           onChange={handleChange}
+          disabled={!formData.state}
         >
-          {City.getCitiesOfCountry("IN").map((city, index) => (
-            <option value={city.name} key={index}>
-              {city.name}
-            </option>
-          ))}
+          {cityOptions}
         </select>
         <label
           htmlFor="subscription_expiry"
