@@ -38,7 +38,13 @@ export const useCreateClient = () => {
         body: JSON.stringify(clientData),
       });
       if (!response.ok) {
-        throw new Error("Error creating client");
+        const errorData = await response.json().catch(() => ({}));
+        const error = new Error(
+          errorData?.error || errorData?.message || "Error creating client"
+        );
+        error.status = response.status;
+        error.details = errorData?.details;
+        throw error;
       }
 
       return response.json();

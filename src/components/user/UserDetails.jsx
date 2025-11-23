@@ -21,7 +21,7 @@ const UserDetails = () => {
     pumpOwner: "",
     phoneNumber: "",
     email: "",
-    password: "1245678",
+    password: "12345678",
     role: "user",
     city: "Abhaneri",
     state: "Andaman and Nicobar Islands",

@@ -32,7 +32,7 @@ const SuperUser = () => {
     setIsModalOpen(false);
   };
   return (
-    <div className="bg-[#212121] h-full sm:h-[100vh] w-screen">
+    <div className="bg-[#212121] h-full sm:h-[100vh] w-screen overflow-x-auto">
       <Navbar />
       <div className="sm:fixed ml-5 bottom-10 right-16 gap-3 flex sm:flex-col items-end">
         <NewsPage />

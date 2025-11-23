@@ -23,10 +23,8 @@ const DrawerForm = () => {
     type: "client",
   };
   const [formData, setFormData] = useState(initialState);
-  const { mutate: createClient, isError: createClientError } =
-    useCreateClient();
-  const { mutate: createEmployee, isError: createEmployeeError } =
-    useCreateEmployee();
+  const { mutate: createClient } = useCreateClient();
+  const { mutate: createEmployee } = useCreateEmployee();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -39,49 +37,60 @@ const DrawerForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (formData.type === "client") {
-      createClient({
-        pan_number: formData.id,
-        name: formData.name,
-        userId: user._id,
-      });
-      if (createClientError) {
-        toast("Error adding Client details", {
-          action: {
-            label: "Okay",
-            onClick: () => console.log("ok"),
+      createClient(
+        {
+          pan_number: formData.id,
+          name: formData.name,
+          userId: user._id,
+        },
+        {
+          onSuccess: () => {
+            toast("Client details added successfully", {
+              action: {
+                label: "Okay",
+                onClick: () => console.log("ok"),
+              },
+            });
+            setFormData(initialState);
           },
-        });
-      } else {
-        toast("Client details added successfully", {
-          action: {
-            label: "Okay",
-            onClick: () => console.log("ok"),
+          onError: (error) => {
+            toast(error?.message || "Error adding Client details", {
+              action: {
+                label: "Okay",
+                onClick: () => console.log("ok"),
+              },
+            });
           },
-        });
-      }
+        }
+      );
     } else {
-      createEmployee({
-        aadhar_number: formData.id,
-        name: formData.name,
-        userId: user._id,
-      });
-      if (createEmployeeError) {
-        toast("Error adding Employee details", {
-          action: {
-            label: "Okay",
-            onClick: () => console.log("ok"),
+      createEmployee(
+        {
+          aadhar_number: formData.id,
+          name: formData.name,
+          userId: user._id,
+        },
+        {
+          onSuccess: () => {
+            toast("Employee details added successfully", {
+              action: {
+                label: "Okay",
+                onClick: () => console.log("ok"),
+              },
+            });
+            setFormData(initialState);
           },
-        });
-      } else {
-        toast("Employee details added successfully", {
-          action: {
-            label: "Okay",
-            onClick: () => console.log("ok"),
+          onError: (error) => {
+            toast(error?.message || "Error adding Employee details", {
+              action: {
+                label: "Okay",
+                onClick: () => console.log("ok"),
+              },
+            });
           },
-        });
-      }
+        }
+      );
     }
-    setFormData(initialState);
   };
   return (
     <Drawer className="w-screen">

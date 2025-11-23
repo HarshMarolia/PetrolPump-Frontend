@@ -38,7 +38,13 @@ export const useCreateEmployee = () => {
         body: JSON.stringify(employeeData),
       });
       if (!response.ok) {
-        throw new Error("Error creating employee");
+        const errorData = await response.json().catch(() => ({}));
+        const error = new Error(
+          errorData?.error || errorData?.message || "Error creating employee"
+        );
+        error.status = response.status;
+        error.details = errorData?.details;
+        throw error;
       }
 
       return response.json();

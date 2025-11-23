@@ -25,9 +25,18 @@ const SearchDetails = ({ searchData }) => {
   }
 
   if (data) {
+    const isBlacklisted = data.blacklisted;
+
     return (
       <div className="flex flex-col text-gray-200">
-        <p className="font-bold">Name: {data.name}</p>
+        <p className="font-bold flex flex-wrap items-center gap-2">
+          <span>Name: {data.name}</span>
+          {isBlacklisted && (
+            <span className="text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded bg-red-600 text-white">
+              Blacklisted
+            </span>
+          )}
+        </p>
         {searchData.type === "client" ? (
           <p className="font-bold">Pan Number: {data.pan_number}</p>
         ) : (
