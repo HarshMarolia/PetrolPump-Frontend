@@ -15,6 +15,18 @@ const UpdateDetails = ({ userData }) => {
     });
   }, [userData]);
 
+  useEffect(() => {
+    if (formData.state && !formData.city) {
+      const cities = getCitiesForState(formData.state);
+      if (cities && cities.length > 0) {
+        setFormData((prevState) => ({
+          ...prevState,
+          city: cities[0],
+        }));
+      }
+    }
+  }, [formData.state]);
+
   const handleChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prevState) => {

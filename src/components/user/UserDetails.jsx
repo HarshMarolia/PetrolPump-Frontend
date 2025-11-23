@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,6 +30,18 @@ const UserDetails = () => {
   };
 
   const [formData, setFormData] = useState(initialState);
+
+  useEffect(() => {
+    if (formData.state && !formData.city) {
+      const cities = getCitiesForState(formData.state);
+      if (cities && cities.length > 0) {
+        setFormData((prevState) => ({
+          ...prevState,
+          city: cities[0],
+        }));
+      }
+    }
+  }, [formData.state]);
 
   const handleChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
