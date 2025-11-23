@@ -75,6 +75,13 @@ const fetchEmployeeById = async (id) => {
   return response.json();
 };
 
-export const useEmployeeById = (id) => {
-  return useQuery(["employee", id], () => fetchEmployeeById(id));
+export const useEmployeeById = (id, options = {}) => {
+  return useQuery(
+    ["employee", id],
+    () => fetchEmployeeById(id),
+    {
+      enabled: id != null && id !== "" && (options.enabled !== false),
+      ...options,
+    }
+  );
 };

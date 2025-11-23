@@ -5,20 +5,31 @@ import { useEmployeeById } from "@/api/employee";
 const SearchDetails = ({ searchData }) => {
   const [data, setData] = useState(null);
 
-  const clientData = useClientById(
-    searchData?.type === "client" ? searchData.id : null
-  );
-  const employeeData = useEmployeeById(
-    searchData?.type === "employee" ? searchData.id : null
-  );
+  // Only fetch if we have a valid searchData object with a non-empty ID
+  const clientId = searchData?.type === "client" && searchData?.id && searchData.id.trim() !== "" ? searchData.id : null;
+  const employeeId = searchData?.type === "employee" && searchData?.id && searchData.id.trim() !== "" ? searchData.id : null;
+
+  const clientData = useClientById(clientId);
+  const employeeData = useEmployeeById(employeeId);
 
   useEffect(() => {
-    if (searchData?.type === "client" && clientData) {
-      setData(clientData.data);
-    } else if (searchData?.type === "employee" && employeeData) {
-      setData(employeeData.data);
+    // Reset data when searchData changes to a new search
+    if (typeof searchData === "string") {
+      setData(null);
+      return;
     }
-  }, [searchData, clientData, employeeData]);
+
+    // Only set data if we have valid search data and successful API response
+    if (clientId && clientData?.data) {
+      setData(clientData.data);
+    } else if (employeeId && employeeData?.data) {
+      setData(employeeData.data);
+    } else if (clientId && clientData?.isError) {
+      setData(null);
+    } else if (employeeId && employeeData?.isError) {
+      setData(null);
+    }
+  }, [searchData, clientData, employeeData, clientId, employeeId]);
 
   if (typeof searchData === "string") {
     return <p className="text-center text-gray-200">{searchData}</p>;

@@ -17,6 +17,13 @@ export function SearchedResult({ setSearchedData }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Validate that ID is not empty
+    if (!formData.id || formData.id.trim() === "") {
+      setSearchedData("Please enter a valid ID to search");
+      return;
+    }
+    
     setSearchedData(formData);
   };
 

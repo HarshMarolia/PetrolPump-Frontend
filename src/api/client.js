@@ -75,6 +75,13 @@ const fetchClientById = async (id) => {
   return response.json();
 };
 
-export const useClientById = (id) => {
-  return useQuery(["client", id], () => fetchClientById(id));
+export const useClientById = (id, options = {}) => {
+  return useQuery(
+    ["client", id],
+    () => fetchClientById(id),
+    {
+      enabled: id != null && id !== "" && (options.enabled !== false),
+      ...options,
+    }
+  );
 };
